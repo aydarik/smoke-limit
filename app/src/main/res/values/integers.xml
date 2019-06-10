@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="smoke_limit_aim_default_key">720</integer>
+    <integer name="current_timeout_default_key">60</integer>
+    <integer name="increase_timeout_default_key">1</integer>
+</resources>
