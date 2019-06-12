@@ -221,17 +221,24 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (needInc && lastSmokeTime > 0) {
-            if (DateUtils.toDays(lastSmokeTime) > DateUtils.toDays(currTime)) increaseTimeout(sharedPref)
+            val lastSmokeDay = DateUtils.toDays(lastSmokeTime)
+            val currDay = DateUtils.toDays(currTime)
+            if (lastSmokeDay < currDay) increaseTimeout(sharedPref, (currDay - lastSmokeDay).toInt())
         }
 
         loadLastEvents(currTimeout)
     }
 
-    private fun increaseTimeout(sharedPref: SharedPreferences) {
+    private fun increaseTimeout(sharedPref: SharedPreferences, incDays: Int) {
+        val inc = sharedPref.getInt(
+            getString(R.string.increase_timeout_key),
+            resources.getInteger(R.integer.increase_timeout_default_key)
+        )
+
         val increasedTimeout = sharedPref.getInt(
             getString(R.string.current_timeout_key),
             resources.getInteger(R.integer.current_timeout_default_key)
-        ) + 1
+        ) + (inc * incDays)
 
         with(sharedPref.edit()) {
             putInt(getString(R.string.current_timeout_key), increasedTimeout)
