@@ -29,13 +29,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_toStartOf="@id/currTimeoutMinLabel"
-                android:padding="10dip"
                 app:np_dividerColor="@color/colorPrimary"
                 app:np_max="@integer/max_timeout_default_key"
                 app:np_min="0"
                 app:np_orientation="horizontal"
                 app:np_selectedTextColor="@color/colorPrimary"
-                app:np_textColor="@color/colorPrimary" />
+                app:np_selectedTextSize="@dimen/selected_text_size"
+                app:np_textColor="@color/colorPrimary"
+                app:np_textSize="@dimen/text_size"
+                app:np_typeface="@string/roboto_light" />
 
             <TextView
                 android:id="@+id/currTimeoutMinLabel"
@@ -65,13 +67,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_toStartOf="@id/increaseTimeoutMinLabel"
-                android:padding="10dip"
                 app:np_dividerColor="@color/colorPrimary"
                 app:np_max="15"
                 app:np_min="0"
                 app:np_orientation="horizontal"
                 app:np_selectedTextColor="@color/colorPrimary"
-                app:np_textColor="@color/colorPrimary" />
+                app:np_selectedTextSize="@dimen/selected_text_size"
+                app:np_textColor="@color/colorPrimary"
+                app:np_textSize="@dimen/text_size"
+                app:np_typeface="@string/roboto_light" />
 
             <TextView
                 android:id="@+id/increaseTimeoutMinLabel"
