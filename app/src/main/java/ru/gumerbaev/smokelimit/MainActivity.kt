@@ -126,7 +126,7 @@ class MainActivity : AppCompatActivity() {
             0
         )
 
-        val currTimeout = sharedPref.getInt(
+        var currTimeout = sharedPref.getInt(
             getString(R.string.current_timeout_key),
             resources.getInteger(R.integer.current_timeout_default_key)
         )
@@ -149,25 +149,24 @@ class MainActivity : AppCompatActivity() {
             apply()
         }
 
-        val lastSmokeDay = DateUtils.toDays(lastSmokeTime)
-        val currDay = DateUtils.toDays(currTime)
-        if (lastSmokeDay < currDay) increaseTimeout(sharedPref, (currDay - lastSmokeDay).toInt())
+        if (lastSmokeTime > 0) {
+            val lastSmokeDay = DateUtils.toDays(lastSmokeTime)
+            val currDay = DateUtils.toDays(currTime)
+            if (lastSmokeDay < currDay)
+                currTimeout = increaseTimeout(sharedPref, currTimeout, (currDay - lastSmokeDay).toInt())
+        }
 
         loadLastEvents(currTimeout)
     }
 
-    private fun increaseTimeout(sharedPref: SharedPreferences, incDays: Int) {
+    private fun increaseTimeout(sharedPref: SharedPreferences, currTimeout: Int, incDays: Int): Int {
         val inc = sharedPref.getInt(
             getString(R.string.increase_timeout_key),
             resources.getInteger(R.integer.increase_timeout_default_key)
         )
 
-        var increasedTimeout = sharedPref.getInt(
-            getString(R.string.current_timeout_key),
-            resources.getInteger(R.integer.current_timeout_default_key)
-        ) + (inc * incDays)
-
         val maxTimeout = resources.getInteger(R.integer.max_timeout_default_key)
+        var increasedTimeout = currTimeout + (inc * incDays)
         if (increasedTimeout > maxTimeout) {
             increasedTimeout = maxTimeout
         }
@@ -178,5 +177,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         currTimeoutTextBox.value = increasedTimeout
+        return increasedTimeout
     }
 }
