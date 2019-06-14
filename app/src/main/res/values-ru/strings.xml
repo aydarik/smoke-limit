@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Smoke Limit</string>
-    <string name="smoke_limit_aim">Цель ограничения</string>
     <string name="current_timeout">Текущее ограничение</string>
     <string name="increment_timeout">Ежедневное увеличение</string>
     <string name="minutes">мин</string>

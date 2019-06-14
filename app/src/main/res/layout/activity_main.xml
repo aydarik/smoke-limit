@@ -20,53 +20,22 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
-                android:labelFor="@id/smokeLimitAimTextBox"
-                android:padding="10dip"
-                android:text="@string/smoke_limit_aim" />
-
-            <EditText
-                android:id="@+id/smokeLimitAimTextBox"
-                android:layout_width="120dp"
-                android:layout_height="wrap_content"
-                android:layout_toStartOf="@id/smokeLimitAimMinLabel"
-                android:ems="10"
-                android:importantForAutofill="no"
-                android:inputType="number"
-                android:padding="10dip" />
-
-            <TextView
-                android:id="@+id/smokeLimitAimMinLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:padding="10dip"
-                android:text="@string/minutes" />
-
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="30dip">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
                 android:labelFor="@id/currTimeoutTextBox"
                 android:padding="10dip"
                 android:text="@string/current_timeout" />
 
-            <EditText
+            <com.shawnlin.numberpicker.NumberPicker
                 android:id="@+id/currTimeoutTextBox"
-                android:layout_width="120dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_toStartOf="@id/currTimeoutMinLabel"
-                android:ems="10"
-                android:enabled="false"
-                android:importantForAutofill="no"
-                android:inputType="number"
-                android:padding="10dip" />
+                android:padding="10dip"
+                app:np_dividerColor="@color/colorPrimary"
+                app:np_max="@integer/max_timeout_default_key"
+                app:np_min="0"
+                app:np_orientation="horizontal"
+                app:np_selectedTextColor="@color/colorPrimary"
+                app:np_textColor="@color/colorPrimary" />
 
             <TextView
                 android:id="@+id/currTimeoutMinLabel"
@@ -77,12 +46,6 @@
                 android:text="@string/minutes" />
 
         </RelativeLayout>
-
-        <SeekBar
-            android:id="@+id/currTimeoutSeekBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:min="1" />
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -97,16 +60,18 @@
                 android:padding="10dip"
                 android:text="@string/increment_timeout" />
 
-            <EditText
+            <com.shawnlin.numberpicker.NumberPicker
                 android:id="@+id/increaseTimeoutTextBox"
-                android:layout_width="120dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_toStartOf="@id/increaseTimeoutMinLabel"
-                android:ems="10"
-                android:enabled="false"
-                android:importantForAutofill="no"
-                android:inputType="number"
-                android:padding="10dip" />
+                android:padding="10dip"
+                app:np_dividerColor="@color/colorPrimary"
+                app:np_max="15"
+                app:np_min="0"
+                app:np_orientation="horizontal"
+                app:np_selectedTextColor="@color/colorPrimary"
+                app:np_textColor="@color/colorPrimary" />
 
             <TextView
                 android:id="@+id/increaseTimeoutMinLabel"
@@ -116,12 +81,6 @@
                 android:padding="10dip"
                 android:text="@string/minutes" />
         </RelativeLayout>
-
-        <SeekBar
-            android:id="@+id/increaseTimeoutSeekBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:min="1" />
 
         <Button
             android:id="@+id/justSmokedButton"

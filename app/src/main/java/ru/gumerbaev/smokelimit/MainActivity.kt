@@ -6,9 +6,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.provider.BaseColumns
-import android.text.Editable
-import android.text.TextWatcher
-import android.widget.SeekBar
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import ru.gumerbaev.smokelimit.data.SmokesDbContract
@@ -16,23 +14,17 @@ import ru.gumerbaev.smokelimit.data.SmokesDbHelper
 import ru.gumerbaev.smokelimit.utils.DateUtils
 import java.text.DateFormat
 import java.util.*
-import java.util.logging.Level
-import java.util.logging.Logger
 import java.util.stream.Collectors
 
 class MainActivity : AppCompatActivity() {
-    private val logger = Logger.getLogger("MainActivity")
-    private val sdf = DateFormat.getDateTimeInstance()
+    private val _tag = "MyActivity"
+    private val _sdf = DateFormat.getDateTimeInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         val sharedPref = getPreferences(Context.MODE_PRIVATE)
-        val aim = sharedPref.getInt(
-            getString(R.string.smoke_limit_aim_key),
-            resources.getInteger(R.integer.smoke_limit_aim_default_key)
-        )
         val curr = sharedPref.getInt(
             getString(R.string.current_timeout_key),
             resources.getInteger(R.integer.current_timeout_default_key)
@@ -42,85 +34,24 @@ class MainActivity : AppCompatActivity() {
             resources.getInteger(R.integer.increase_timeout_default_key)
         )
 
-        smokeLimitAimTextBox.setText(aim.toString())
-        smokeLimitAimTextBox.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
+        currTimeoutTextBox.value = curr
+        currTimeoutTextBox.setOnValueChangedListener { _, _, newVal ->
+            with(sharedPref.edit()) {
+                putInt(getString(R.string.current_timeout_key), newVal)
+                apply()
             }
+        }
 
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+        increaseTimeoutTextBox.value = inc
+        increaseTimeoutTextBox.setOnValueChangedListener { _, _, newVal ->
+            with(sharedPref.edit()) {
+                putInt(getString(R.string.increase_timeout_key), newVal)
+                apply()
             }
+        }
 
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (s?.length != 0) {
-                    with(sharedPref.edit()) {
-                        putInt(getString(R.string.current_timeout_key), Integer.valueOf(s.toString()))
-                        apply()
-                    }
-                }
-            }
-        })
-        smokeLimitAimTextBox.isEnabled = false // TODO: re-enable
-
-        setCurrentSeekBarActions(curr, aim)
-        setIncreaseSeekBarActions(inc)
-
-        justSmokedButton.setOnClickListener { insertSmokeEntry(curr < aim) }
+        justSmokedButton.setOnClickListener { insertSmokeEntry() }
         loadLastEvents(curr)
-    }
-
-    private fun setCurrentSeekBarActions(curr: Int, aim: Int) {
-        val currTimeoutValueString = currTimeoutTextBox.text.toString()
-        val currTimeoutValueNumber =
-            if (currTimeoutValueString.isBlank()) curr else Integer.valueOf(currTimeoutValueString)
-
-        currTimeoutTextBox.setText(currTimeoutValueNumber.toString())
-        currTimeoutSeekBar.progress = currTimeoutValueNumber
-        currTimeoutSeekBar.max = aim
-        currTimeoutSeekBar.isEnabled = false // TODO: re-enable
-
-        currTimeoutSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                currTimeoutTextBox.setText(progress.toString())
-            }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {
-            }
-
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                val sharedPref = getPreferences(Context.MODE_PRIVATE)
-                with(sharedPref.edit()) {
-                    putInt(getString(R.string.current_timeout_key), seekBar?.progress!!)
-                    apply()
-                }
-            }
-        })
-    }
-
-    private fun setIncreaseSeekBarActions(inc: Int) {
-        val increaseTimeoutValueString = increaseTimeoutTextBox.text.toString()
-        val increaseTimeoutValueNumber =
-            if (increaseTimeoutValueString.isBlank()) inc else Integer.valueOf(increaseTimeoutValueString)
-
-        increaseTimeoutTextBox.setText(increaseTimeoutValueNumber.toString())
-        increaseTimeoutSeekBar.progress = increaseTimeoutValueNumber
-        increaseTimeoutSeekBar.max = 5
-
-        increaseTimeoutSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                increaseTimeoutTextBox.setText(progress.toString())
-            }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {
-            }
-
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                val sharedPref = getPreferences(Context.MODE_PRIVATE)
-                with(sharedPref.edit()) {
-                    putInt(getString(R.string.increase_timeout_key), seekBar?.progress!!)
-                    apply()
-                }
-            }
-        })
     }
 
     @SuppressLint("SetTextI18n")
@@ -158,9 +89,9 @@ class MainActivity : AppCompatActivity() {
                 val timeout = getInt(getColumnIndexOrThrow(SmokesDbContract.SmokeEntry.COLUMN_TIMEOUT_TITLE))
                 if (prevDate != null) {
                     val realTimeout = DateUtils.toMinutes(date - prevDate!!)
-                    historyArray.push(sdf.format(Date(date)) + " - " + realTimeout + " (" + timeout + ") " + minString)
+                    historyArray.push(_sdf.format(Date(date)) + " - " + realTimeout + " (" + timeout + ") " + minString)
                 } else {
-                    historyArray.push(sdf.format(Date(date)))
+                    historyArray.push(_sdf.format(Date(date)))
                 }
                 prevDate = date
             }
@@ -184,11 +115,9 @@ class MainActivity : AppCompatActivity() {
 
             justSmokedButton.isEnabled = accessible
         } else justSmokedButton.isEnabled = true
-
-//        justSmokedButton.isEnabled = true
     }
 
-    private fun insertSmokeEntry(needInc: Boolean) {
+    private fun insertSmokeEntry() {
         val currTime = System.currentTimeMillis()
 
         val sharedPref = getPreferences(Context.MODE_PRIVATE)
@@ -213,18 +142,16 @@ class MainActivity : AppCompatActivity() {
 
         // Insert the new row, returning the primary key value of the new row
         val newRowId = db?.insert(SmokesDbContract.SmokeEntry.TABLE_NAME, null, values)
-        logger.log(Level.INFO, "Row ID: $newRowId")
+        Log.d(_tag, "Row ID: $newRowId")
 
         with(sharedPref.edit()) {
             putLong(getString(R.string.last_smoke_time_key), currTime)
             apply()
         }
 
-        if (needInc && lastSmokeTime > 0) {
-            val lastSmokeDay = DateUtils.toDays(lastSmokeTime)
-            val currDay = DateUtils.toDays(currTime)
-            if (lastSmokeDay < currDay) increaseTimeout(sharedPref, (currDay - lastSmokeDay).toInt())
-        }
+        val lastSmokeDay = DateUtils.toDays(lastSmokeTime)
+        val currDay = DateUtils.toDays(currTime)
+        if (lastSmokeDay < currDay) increaseTimeout(sharedPref, (currDay - lastSmokeDay).toInt())
 
         loadLastEvents(currTimeout)
     }
@@ -235,17 +162,21 @@ class MainActivity : AppCompatActivity() {
             resources.getInteger(R.integer.increase_timeout_default_key)
         )
 
-        val increasedTimeout = sharedPref.getInt(
+        var increasedTimeout = sharedPref.getInt(
             getString(R.string.current_timeout_key),
             resources.getInteger(R.integer.current_timeout_default_key)
         ) + (inc * incDays)
+
+        val maxTimeout = resources.getInteger(R.integer.max_timeout_default_key)
+        if (increasedTimeout > maxTimeout) {
+            increasedTimeout = maxTimeout
+        }
 
         with(sharedPref.edit()) {
             putInt(getString(R.string.current_timeout_key), increasedTimeout)
             apply()
         }
 
-        currTimeoutSeekBar.progress = increasedTimeout
-        currTimeoutTextBox.setText(increasedTimeout.toString())
+        currTimeoutTextBox.value = increasedTimeout
     }
 }
