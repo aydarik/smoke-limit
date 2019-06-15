@@ -1,49 +1,62 @@
 package ru.gumerbaev.smokelimit
 
 import android.annotation.SuppressLint
-import android.content.ContentValues
 import android.content.Context
-import android.content.SharedPreferences
 import android.os.Bundle
-import android.provider.BaseColumns
 import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
-import ru.gumerbaev.smokelimit.data.SmokesDbContract
+import ru.gumerbaev.smokelimit.adapters.SmokeAdapter
+import ru.gumerbaev.smokelimit.entity.SmokeEntity
 import ru.gumerbaev.smokelimit.data.SmokesDbHelper
+import ru.gumerbaev.smokelimit.data.SmokesDbQueryExecutor
 import ru.gumerbaev.smokelimit.utils.DateUtils
-import java.text.DateFormat
 import java.util.*
-import java.util.stream.Collectors
+import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity() {
     private val _tag = "MyActivity"
-    private val _sdf = DateFormat.getDateTimeInstance()
+    private val _dbExecutor = SmokesDbQueryExecutor(SmokesDbHelper(this))
+
+    private var _currTimeout: Int? = null
+    private var _incTimeout: Int? = null
+    private var _lastEntry: SmokeEntity? = null
+
+    private val _smokeEntries = ArrayList<SmokeEntity>()
+    private var _smokeAdapter: SmokeAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        settingsLayout.visibility = View.GONE
+
+        _smokeAdapter = SmokeAdapter(_smokeEntries, this)
+        historyList.adapter = _smokeAdapter
+
         val sharedPref = getPreferences(Context.MODE_PRIVATE)
-        val curr = sharedPref.getInt(
+        _currTimeout = sharedPref.getInt(
             getString(R.string.current_timeout_key),
             resources.getInteger(R.integer.current_timeout_default_key)
         )
-        val inc = sharedPref.getInt(
+        _incTimeout = sharedPref.getInt(
             getString(R.string.increase_timeout_key),
             resources.getInteger(R.integer.increase_timeout_default_key)
         )
 
-        currTimeoutTextBox.value = curr
+        currTimeoutTextBox.value = _currTimeout!!
         currTimeoutTextBox.setOnValueChangedListener { _, _, newVal ->
+            _currTimeout = newVal
             with(sharedPref.edit()) {
                 putInt(getString(R.string.current_timeout_key), newVal)
                 apply()
             }
         }
 
-        increaseTimeoutTextBox.value = inc
+        increaseTimeoutTextBox.value = _incTimeout!!
         increaseTimeoutTextBox.setOnValueChangedListener { _, _, newVal ->
+            _incTimeout = newVal
             with(sharedPref.edit()) {
                 putInt(getString(R.string.increase_timeout_key), newVal)
                 apply()
@@ -51,132 +64,69 @@ class MainActivity : AppCompatActivity() {
         }
 
         justSmokedButton.setOnClickListener { insertSmokeEntry() }
-        loadLastEvents(curr)
+        lockButton.setOnClickListener {
+            if (settingsLayout.visibility != View.GONE) {
+                settingsLayout.visibility = View.GONE
+                lockButton.setIconResource(android.R.drawable.arrow_up_float)
+            } else{
+                settingsLayout.visibility = View.VISIBLE
+                lockButton.setIconResource(android.R.drawable.arrow_down_float)
+            }
+        }
+        loadLastEvents()
     }
 
     @SuppressLint("SetTextI18n")
-    private fun loadLastEvents(currTimeout: Int) {
-        val db = SmokesDbHelper(this).readableDatabase
+    private fun loadLastEvents() {
+        val limit = 200
 
-        // Define a projection that specifies which columns from the database
-        // you will actually use after this query.
-        val projection = arrayOf(
-            BaseColumns._ID,
-            SmokesDbContract.SmokeEntry.COLUMN_DATE_TITLE,
-            SmokesDbContract.SmokeEntry.COLUMN_TIMEOUT_TITLE
-        )
+        val entries = _dbExecutor.getEntries(limit + 1)
+        if (entries.size == limit) entries.dropLast(1)
 
-        // How you want the results sorted in the resulting Cursor
-        val sortOrder = "${SmokesDbContract.SmokeEntry.COLUMN_DATE_TITLE} ASC"
-
-        val cursor = db.query(
-            SmokesDbContract.SmokeEntry.TABLE_NAME, // The table to query
-            projection,         // The array of columns to return (pass null to get all)
-            null,       // The columns for the WHERE clause
-            null,   // The values for the WHERE clause
-            null,       // don't group the rows
-            null,       // don't filter by row groups
-            sortOrder           // The sort order
-        )
-
-        val minString = getString(R.string.minutes)
-
-        val historyArray = ArrayDeque<String>()
-        var prevDate: Long? = null
-        with(cursor) {
-            while (moveToNext()) {
-                val date = getLong(getColumnIndexOrThrow(SmokesDbContract.SmokeEntry.COLUMN_DATE_TITLE))
-                val timeout = getInt(getColumnIndexOrThrow(SmokesDbContract.SmokeEntry.COLUMN_TIMEOUT_TITLE))
-                if (prevDate != null) {
-                    val realTimeout = DateUtils.toMinutes(date - prevDate!!)
-                    historyArray.push(_sdf.format(Date(date)) + " - " + realTimeout + " (" + timeout + ") " + minString)
-                } else {
-                    historyArray.push(_sdf.format(Date(date)))
-                }
-                prevDate = date
-            }
+        with(_smokeEntries){
+            clear()
+            addAll(entries)
         }
+        _smokeAdapter?.notifyDataSetChanged()
 
-        if (prevDate != null) {
-            val realTimeout = DateUtils.toMinutes(System.currentTimeMillis() - prevDate!!)
-            val accessible = if (historyArray.isEmpty()) {
-                true
-            } else {
-                historyList.setText(
-                    historyArray.stream()
-                        .collect(Collectors.joining("\n"))
-                )
+        _lastEntry = entries.firstOrNull()
 
-                realTimeout >= currTimeout
-            }
+        if (_lastEntry != null) {
+            val realTimeoutMs = System.currentTimeMillis() - _lastEntry!!.date.time
+            val accessible = DateUtils.toMinutes(realTimeoutMs) > _currTimeout!!
 
             if (accessible) justSmokedButton.text = getString(R.string.just_smoked)
-            else justSmokedButton.text = (currTimeout - realTimeout).toString() + " " + minString
+            else justSmokedButton.text = DateUtils.remainString(realTimeoutMs, _currTimeout!!)
 
             justSmokedButton.isEnabled = accessible
         } else justSmokedButton.isEnabled = true
     }
 
     private fun insertSmokeEntry() {
-        val currTime = System.currentTimeMillis()
-
-        val sharedPref = getPreferences(Context.MODE_PRIVATE)
-        val lastSmokeTime = sharedPref.getLong(
-            getString(R.string.last_smoke_time_key),
-            0
-        )
-
-        var currTimeout = sharedPref.getInt(
-            getString(R.string.current_timeout_key),
-            resources.getInteger(R.integer.current_timeout_default_key)
-        )
-
-        // Gets the data repository in write mode
-        val db = SmokesDbHelper(this).writableDatabase
-
-        // Create a new map of values, where column names are the keys
-        val values = ContentValues().apply {
-            put(SmokesDbContract.SmokeEntry.COLUMN_DATE_TITLE, currTime)
-            put(SmokesDbContract.SmokeEntry.COLUMN_TIMEOUT_TITLE, currTimeout)
+        if (_lastEntry != null) {
+            val dateDiff = DateUtils.dayDiff(_lastEntry!!.date)
+            if (dateDiff > 0) {
+                increaseTimeout(dateDiff)
+            }
         }
 
-        // Insert the new row, returning the primary key value of the new row
-        val newRowId = db?.insert(SmokesDbContract.SmokeEntry.TABLE_NAME, null, values)
-        Log.d(_tag, "Row ID: $newRowId")
-
-        with(sharedPref.edit()) {
-            putLong(getString(R.string.last_smoke_time_key), currTime)
-            apply()
-        }
-
-        if (lastSmokeTime > 0) {
-            val lastSmokeDay = DateUtils.toDays(lastSmokeTime)
-            val currDay = DateUtils.toDays(currTime)
-            if (lastSmokeDay < currDay)
-                currTimeout = increaseTimeout(sharedPref, currTimeout, (currDay - lastSmokeDay).toInt())
-        }
-
-        loadLastEvents(currTimeout)
+        _dbExecutor.addEntry(SmokeEntity(Date(), _currTimeout!!))
+        loadLastEvents()
     }
 
-    private fun increaseTimeout(sharedPref: SharedPreferences, currTimeout: Int, incDays: Int): Int {
-        val inc = sharedPref.getInt(
-            getString(R.string.increase_timeout_key),
-            resources.getInteger(R.integer.increase_timeout_default_key)
-        )
-
+    private fun increaseTimeout(incDays: Int) {
         val maxTimeout = resources.getInteger(R.integer.max_timeout_default_key)
-        var increasedTimeout = currTimeout + (inc * incDays)
-        if (increasedTimeout > maxTimeout) {
-            increasedTimeout = maxTimeout
+        _currTimeout = _currTimeout?.plus((_incTimeout!! * incDays))
+        if (_currTimeout!! > maxTimeout) {
+            _currTimeout = maxTimeout
+            Log.d(_tag, "Max value reached")
         }
 
-        with(sharedPref.edit()) {
-            putInt(getString(R.string.current_timeout_key), increasedTimeout)
+        with(getPreferences(Context.MODE_PRIVATE).edit()) {
+            putInt(getString(R.string.current_timeout_key), _currTimeout!!)
             apply()
         }
 
-        currTimeoutTextBox.value = increasedTimeout
-        return increasedTimeout
+        currTimeoutTextBox.value = _currTimeout!!
     }
 }

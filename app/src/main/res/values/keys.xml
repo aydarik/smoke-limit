@@ -2,7 +2,6 @@
 <resources>
     <string name="current_timeout_key" translatable="false">current_timeout_key</string>
     <string name="increase_timeout_key" translatable="false">increase_timeout_key</string>
-    <string name="last_smoke_time_key" translatable="false">last_smoke_time_key</string>
 
     <string name="roboto_light" translatable="false">sans-serif-light</string>
 </resources>

@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Smoke Limit</string>
-    <string name="current_timeout">Current timeout</string>
-    <string name="increment_timeout">Increment timeout</string>
+    <string name="current_timeout">Current\ntimeout</string>
+    <string name="increment_timeout">Increment\ntimeout</string>
     <string name="minutes">min</string>
+    <string name="hours">hour</string>
     <string name="just_smoked">Just smoked</string>
+    <string name="settings">Settings</string>
 </resources>

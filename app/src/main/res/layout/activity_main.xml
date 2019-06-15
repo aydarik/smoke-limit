@@ -1,34 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".MainActivity">
+
+    <ListView
+        android:id="@+id/historyList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginHorizontal="5dp"
+        android:layout_weight="1" />
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="5dp"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/justSmokedButton"
+            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:enabled="false"
+            android:text="@string/just_smoked" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/lockButton"
+            style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/settings"
+            app:icon="@android:drawable/arrow_up_float" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/settingsLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dip">
+            android:layout_margin="10dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
                 android:labelFor="@id/currTimeoutTextBox"
-                android:padding="10dip"
-                android:text="@string/current_timeout" />
+                android:text="@string/current_timeout"
+                android:textSize="20sp" />
 
             <com.shawnlin.numberpicker.NumberPicker
                 android:id="@+id/currTimeoutTextBox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_toStartOf="@id/currTimeoutMinLabel"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
                 app:np_dividerColor="@color/colorPrimary"
                 app:np_max="@integer/max_timeout_default_key"
                 app:np_min="0"
@@ -38,35 +73,28 @@
                 app:np_textColor="@color/colorPrimary"
                 app:np_textSize="@dimen/text_size"
                 app:np_typeface="@string/roboto_light" />
-
-            <TextView
-                android:id="@+id/currTimeoutMinLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:padding="10dip"
-                android:text="@string/minutes" />
-
         </RelativeLayout>
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="30dip">
+            android:layout_margin="10dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
                 android:labelFor="@id/increaseTimeoutTextBox"
-                android:padding="10dip"
-                android:text="@string/increment_timeout" />
+                android:text="@string/increment_timeout"
+                android:textSize="20sp" />
 
             <com.shawnlin.numberpicker.NumberPicker
                 android:id="@+id/increaseTimeoutTextBox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_toStartOf="@id/increaseTimeoutMinLabel"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
                 app:np_dividerColor="@color/colorPrimary"
                 app:np_max="15"
                 app:np_min="0"
@@ -76,35 +104,6 @@
                 app:np_textColor="@color/colorPrimary"
                 app:np_textSize="@dimen/text_size"
                 app:np_typeface="@string/roboto_light" />
-
-            <TextView
-                android:id="@+id/increaseTimeoutMinLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:padding="10dip"
-                android:text="@string/minutes" />
         </RelativeLayout>
-
-        <Button
-            android:id="@+id/justSmokedButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dip"
-            android:enabled="false"
-            android:text="@string/just_smoked" />
-
-        <EditText
-            android:id="@+id/historyList"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_margin="10dip"
-            android:ems="10"
-            android:enabled="false"
-            android:gravity="start|top"
-            android:importantForAutofill="no"
-            android:inputType="textMultiLine" />
-
     </LinearLayout>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>
