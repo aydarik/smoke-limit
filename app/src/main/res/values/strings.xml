@@ -7,4 +7,6 @@
     <string name="hours">hour</string>
     <string name="just_smoked">Just smoked</string>
     <string name="settings">Settings</string>
+    <string name="chart">Chart</string>
+    <string name="delay">Delay</string>
 </resources>

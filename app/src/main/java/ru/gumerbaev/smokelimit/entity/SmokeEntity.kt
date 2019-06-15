@@ -9,7 +9,7 @@ class SmokeEntity(var id: Long?, var date: Date, var timeout: Int, var prev: Smo
 
     constructor(date: Date, timeout: Int) : this(null, date, timeout, null)
 
-    private fun getDelay(): Long? {
+    fun getDelay(): Long? {
         if (prev == null) return null
         return date.time - prev!!.date.time
     }

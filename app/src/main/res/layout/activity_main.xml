@@ -30,6 +30,13 @@
             android:text="@string/just_smoked" />
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/chartButton"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/chart" />
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/lockButton"
             style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
             android:layout_width="wrap_content"

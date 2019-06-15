@@ -2,6 +2,7 @@ package ru.gumerbaev.smokelimit
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -68,10 +69,14 @@ class MainActivity : AppCompatActivity() {
             if (settingsLayout.visibility != View.GONE) {
                 settingsLayout.visibility = View.GONE
                 lockButton.setIconResource(android.R.drawable.arrow_up_float)
-            } else{
+            } else {
                 settingsLayout.visibility = View.VISIBLE
                 lockButton.setIconResource(android.R.drawable.arrow_down_float)
             }
+        }
+        chartButton.setOnClickListener {
+            val intent = Intent(this, ChartActivity::class.java).apply {}
+            startActivity(intent)
         }
         loadLastEvents()
     }
@@ -83,7 +88,7 @@ class MainActivity : AppCompatActivity() {
         val entries = _dbExecutor.getEntries(limit + 1)
         if (entries.size == limit) entries.dropLast(1)
 
-        with(_smokeEntries){
+        with(_smokeEntries) {
             clear()
             addAll(entries)
         }

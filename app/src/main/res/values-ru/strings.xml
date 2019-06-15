@@ -7,4 +7,6 @@
     <string name="hours">час</string>
     <string name="just_smoked">Покурил</string>
     <string name="settings">Настройки</string>
+    <string name="chart">График</string>
+    <string name="delay">Время</string>
 </resources>
