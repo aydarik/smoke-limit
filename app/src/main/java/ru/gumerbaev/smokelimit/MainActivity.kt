@@ -18,6 +18,7 @@ import kotlin.collections.ArrayList
 import android.content.ComponentName
 import android.os.IBinder
 import android.content.ServiceConnection
+import android.preference.PreferenceManager
 import ru.gumerbaev.smokelimit.service.TimerNotificationService
 import kotlin.concurrent.fixedRateTimer
 
@@ -40,7 +41,6 @@ class MainActivity : AppCompatActivity() {
     private val _serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
             _timeBinder = service as TimerNotificationService.TimeBinder
-            _timeBinder?.setParams(_lastEntry?.date?.time, _currTimeout ?: 0)
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
@@ -51,10 +51,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        val timerIntent = TimerNotificationService.getIntent(this)
-        startService(timerIntent)
-        bindService(timerIntent, _serviceConnection, Context.BIND_AUTO_CREATE)
 
         fixedRateTimer(
             "time_check", true, Date(), 1000
@@ -71,7 +67,7 @@ class MainActivity : AppCompatActivity() {
         _smokeAdapter = SmokeAdapter(_smokeEntries, this)
         historyList.adapter = _smokeAdapter
 
-        val sharedPref = getPreferences(Context.MODE_PRIVATE)
+        val sharedPref = PreferenceManager.getDefaultSharedPreferences(this)
         _currTimeout = sharedPref.getInt(
             getString(R.string.current_timeout_key),
             resources.getInteger(R.integer.current_timeout_default_key)
@@ -122,6 +118,12 @@ class MainActivity : AppCompatActivity() {
         loadLastEvents()
     }
 
+    override fun onResume() {
+        val timerIntent = TimerNotificationService.getIntent(this)
+        bindService(timerIntent, _serviceConnection, Context.BIND_AUTO_CREATE)
+        super.onResume()
+    }
+
     override fun onStop() {
         unbindService(_serviceConnection)
         super.onStop()
@@ -137,7 +139,6 @@ class MainActivity : AppCompatActivity() {
         _smokeAdapter?.notifyDataSetChanged()
 
         _lastEntry = entries.firstOrNull()
-        _timeBinder?.setParams(_lastEntry?.date?.time, _currTimeout ?: 0)
     }
 
     private fun insertSmokeEntry() {
@@ -160,7 +161,8 @@ class MainActivity : AppCompatActivity() {
             Log.d(TAG, "Max value reached")
         }
 
-        with(getPreferences(Context.MODE_PRIVATE).edit()) {
+        val sharedPref = PreferenceManager.getDefaultSharedPreferences(this)
+        with(sharedPref.edit()) {
             putInt(getString(R.string.current_timeout_key), _currTimeout!!)
             apply()
         }

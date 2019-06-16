@@ -6,12 +6,6 @@ class DateUtils {
     companion object {
         fun toMinutes(timestamp: Long): Int = (timestamp / 1000 / 60).toInt()
 
-/*
-        fun remainString(delayMs: Long, timeoutMin: Int): String {
-            return minString(timeoutMin - toMinutes(delayMs))
-        }
-*/
-
         fun delayString(delayMs: Long): String {
             return minString(toMinutes(delayMs))
         }
