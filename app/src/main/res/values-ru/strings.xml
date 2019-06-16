@@ -8,5 +8,5 @@
     <string name="just_smoked">Покурил</string>
     <string name="settings">Настройки</string>
     <string name="chart">График</string>
-    <string name="delay">Время</string>
+    <string name="amount">Количество сигарет</string>
 </resources>

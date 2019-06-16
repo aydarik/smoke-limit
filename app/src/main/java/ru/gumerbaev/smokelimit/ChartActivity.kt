@@ -1,16 +1,49 @@
 package ru.gumerbaev.smokelimit
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.github.mikephil.charting.data.Entry
-import com.github.mikephil.charting.data.LineDataSet
+import android.util.LongSparseArray
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.util.keyIterator
+import com.github.mikephil.charting.components.AxisBase
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.BarData
+import com.github.mikephil.charting.data.BarDataSet
+import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.formatter.ValueFormatter
 import kotlinx.android.synthetic.main.activity_chart.*
-import com.github.mikephil.charting.data.LineData
 import ru.gumerbaev.smokelimit.data.SmokesDbHelper
 import ru.gumerbaev.smokelimit.data.SmokesDbQueryExecutor
-import ru.gumerbaev.smokelimit.utils.DateUtils
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
+
 
 class ChartActivity : AppCompatActivity() {
+
+    companion object {
+        private val TAG = "ChartActivity"
+
+        const val INCREMENTER = 24 * 60 * 60 * 1000;
+    }
+
+    internal inner class DateAxisValueFormatter : ValueFormatter() {
+        private val _sdf = SimpleDateFormat("MM/dd", Locale.getDefault())
+
+        override fun getAxisLabel(value: Float, axis: AxisBase?): String {
+            return _sdf.format(Date(value.toLong() * INCREMENTER))
+        }
+    }
+
+    internal inner class IntValueFormatter : ValueFormatter() {
+
+        override fun getAxisLabel(value: Float, axis: AxisBase?): String {
+            return value.toInt().toString()
+        }
+
+        override fun getBarLabel(barEntry: BarEntry?): String {
+            return barEntry?.y?.toInt().toString()
+        }
+    }
 
     private val _dbExecutor = SmokesDbQueryExecutor(SmokesDbHelper(this))
 
@@ -21,15 +54,34 @@ class ChartActivity : AppCompatActivity() {
         chart.description.isEnabled = false
         chart.legend.isEnabled = false
 
-        val list = _dbExecutor.getEntries(1000)
-        val firstTime = list.lastOrNull()?.date?.time
-        val entries = list.map { e ->
-            Entry(DateUtils.toMinutes(e.date.time - firstTime!!).toFloat(),
-                e.getDelay()?.let { DateUtils.toMinutes(it).toFloat() } ?: 0f)
+        val xAxis = chart.xAxis
+        xAxis.position = XAxis.XAxisPosition.BOTTOM
+        xAxis.valueFormatter = DateAxisValueFormatter()
+
+        val intFormatter = IntValueFormatter()
+        chart.axisLeft.valueFormatter = intFormatter
+        chart.axisRight.valueFormatter = intFormatter
+        chart.axisRight.isEnabled = false
+
+        val map = LongSparseArray<Int>()
+        val entries = _dbExecutor.getLastEntries(1000)
+        entries.forEach {
+            val key = it.date.time / INCREMENTER
+            val currVal = map[key] ?: 0
+            map.put(key, currVal + 1)
         }
-        val dataSet = LineDataSet(entries, getString(R.string.delay));
-        val lineData = LineData(dataSet)
-        chart.data = lineData
+
+        val list = ArrayList<BarEntry>()
+        for (k in map.keyIterator()) {
+            list.add(
+                BarEntry(k.toFloat(), map[k].toFloat())
+            )
+        }
+
+        val dataSet = BarDataSet(list, getString(R.string.amount))
+        dataSet.valueFormatter = intFormatter
+        chart.data = BarData(dataSet)
+
         chart.invalidate() // Refresh
     }
 }

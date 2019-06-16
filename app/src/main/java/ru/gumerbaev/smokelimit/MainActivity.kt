@@ -15,9 +15,18 @@ import ru.gumerbaev.smokelimit.data.SmokesDbQueryExecutor
 import ru.gumerbaev.smokelimit.utils.DateUtils
 import java.util.*
 import kotlin.collections.ArrayList
+import android.content.ComponentName
+import android.os.IBinder
+import android.content.ServiceConnection
+import ru.gumerbaev.smokelimit.service.TimerNotificationService
+import kotlin.concurrent.fixedRateTimer
 
 class MainActivity : AppCompatActivity() {
-    private val _tag = "MyActivity"
+
+    companion object {
+        const val TAG = "MainActivity"
+    }
+
     private val _dbExecutor = SmokesDbQueryExecutor(SmokesDbHelper(this))
 
     private var _currTimeout: Int? = null
@@ -27,9 +36,35 @@ class MainActivity : AppCompatActivity() {
     private val _smokeEntries = ArrayList<SmokeEntity>()
     private var _smokeAdapter: SmokeAdapter? = null
 
+    private var _timeBinder: TimerNotificationService.TimeBinder? = null
+    private val _serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            _timeBinder = service as TimerNotificationService.TimeBinder
+            _timeBinder?.setParams(_lastEntry?.date?.time, _currTimeout ?: 0)
+        }
+
+        override fun onServiceDisconnected(name: ComponentName) {
+            _timeBinder = null
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        val timerIntent = TimerNotificationService.getIntent(this)
+        startService(timerIntent)
+        bindService(timerIntent, _serviceConnection, Context.BIND_AUTO_CREATE)
+
+        fixedRateTimer(
+            "time_check", true, Date(), 1000
+        ) {
+            val remain = _timeBinder?.getRemain()
+            runOnUiThread {
+                justSmokedButton.text = DateUtils.minString(remain ?: 0)
+                justSmokedButton.isEnabled = remain != null && remain >= 0
+            }
+        }
 
         settingsLayout.visibility = View.GONE
 
@@ -64,7 +99,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        justSmokedButton.setOnClickListener { insertSmokeEntry() }
+        justSmokedButton.setOnClickListener {
+            justSmokedButton.isEnabled = false
+            insertSmokeEntry()
+        }
+
         lockButton.setOnClickListener {
             if (settingsLayout.visibility != View.GONE) {
                 settingsLayout.visibility = View.GONE
@@ -74,20 +113,23 @@ class MainActivity : AppCompatActivity() {
                 lockButton.setIconResource(android.R.drawable.arrow_down_float)
             }
         }
+
         chartButton.setOnClickListener {
             val intent = Intent(this, ChartActivity::class.java).apply {}
             startActivity(intent)
         }
+
         loadLastEvents()
+    }
+
+    override fun onStop() {
+        unbindService(_serviceConnection)
+        super.onStop()
     }
 
     @SuppressLint("SetTextI18n")
     private fun loadLastEvents() {
-        val limit = 200
-
-        val entries = _dbExecutor.getEntries(limit + 1)
-        if (entries.size == limit) entries.dropLast(1)
-
+        val entries = _dbExecutor.getLastEntries(200)
         with(_smokeEntries) {
             clear()
             addAll(entries)
@@ -95,16 +137,7 @@ class MainActivity : AppCompatActivity() {
         _smokeAdapter?.notifyDataSetChanged()
 
         _lastEntry = entries.firstOrNull()
-
-        if (_lastEntry != null) {
-            val realTimeoutMs = System.currentTimeMillis() - _lastEntry!!.date.time
-            val accessible = DateUtils.toMinutes(realTimeoutMs) > _currTimeout!!
-
-            if (accessible) justSmokedButton.text = getString(R.string.just_smoked)
-            else justSmokedButton.text = DateUtils.remainString(realTimeoutMs, _currTimeout!!)
-
-            justSmokedButton.isEnabled = accessible
-        } else justSmokedButton.isEnabled = true
+        _timeBinder?.setParams(_lastEntry?.date?.time, _currTimeout ?: 0)
     }
 
     private fun insertSmokeEntry() {
@@ -124,7 +157,7 @@ class MainActivity : AppCompatActivity() {
         _currTimeout = _currTimeout?.plus((_incTimeout!! * incDays))
         if (_currTimeout!! > maxTimeout) {
             _currTimeout = maxTimeout
-            Log.d(_tag, "Max value reached")
+            Log.d(TAG, "Max value reached")
         }
 
         with(getPreferences(Context.MODE_PRIVATE).edit()) {

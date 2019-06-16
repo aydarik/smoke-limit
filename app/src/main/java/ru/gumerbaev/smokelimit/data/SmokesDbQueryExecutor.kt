@@ -15,7 +15,7 @@ class SmokesDbQueryExecutor(private val db: SmokesDbHelper) {
             "SELECT * FROM ${SmokesDbContract.SmokeEntry.TABLE_NAME} ORDER BY ${BaseColumns._ID} DESC LIMIT ?"
     }
 
-    fun getEntries(limit: Int): List<SmokeEntity> {
+    fun getLastEntries(limit: Int): List<SmokeEntity> {
         val cursor = db.readableDatabase.rawQuery(SQL_GET_ENTRIES, arrayOf(limit.toString()))
         val result = ArrayList<SmokeEntity>()
 
