@@ -4,7 +4,7 @@ import java.util.*
 
 class DateUtils {
     companion object {
-        fun toMinutes(timestamp: Long): Int = (timestamp / 1000 / 60).toInt()
+        fun toMinutes(timestamp: Long): Int = (timestamp / (1000 * 60)).toInt()
 
         fun delayString(delayMs: Long): String {
             return minString(toMinutes(delayMs))
@@ -24,6 +24,6 @@ class DateUtils {
         }
 
         fun dayDiff(date: Date): Int = toDays(System.currentTimeMillis()) - toDays(date.time)
-        private fun toDays(timestamp: Long): Int = toMinutes(timestamp) / 60 / 24
+        private fun toDays(timestamp: Long): Int = toMinutes(timestamp) / (60 * 24)
     }
 }

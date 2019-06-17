@@ -9,6 +9,6 @@ class BootReceiver: BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
         val timerIntent = Intent(context, TimerNotificationService::class.java)
-        context?.startService(timerIntent)
+        context?.startForegroundService(timerIntent)
     }
 }

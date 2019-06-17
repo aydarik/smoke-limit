@@ -52,6 +52,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val timerIntent = TimerNotificationService.getIntent(this)
+        startForegroundService(timerIntent)
+
         fixedRateTimer(
             "time_check", true, Date(), 1000
         ) {

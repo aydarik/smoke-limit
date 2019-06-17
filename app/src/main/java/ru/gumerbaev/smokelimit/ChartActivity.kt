@@ -21,8 +21,7 @@ import kotlin.collections.ArrayList
 class ChartActivity : AppCompatActivity() {
 
     companion object {
-        private val TAG = "ChartActivity"
-
+        const val TAG = "ChartActivity"
         const val INCREMENTER = 24 * 60 * 60 * 1000;
     }
 
@@ -46,6 +45,7 @@ class ChartActivity : AppCompatActivity() {
     }
 
     private val _dbExecutor = SmokesDbQueryExecutor(SmokesDbHelper(this))
+    private val _tzOffset = TimeZone.getDefault().rawOffset
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,7 +66,7 @@ class ChartActivity : AppCompatActivity() {
         val map = LongSparseArray<Int>()
         val entries = _dbExecutor.getLastEntries(1000)
         entries.forEach {
-            val key = it.date.time / INCREMENTER
+            val key = (it.date.time + _tzOffset) / INCREMENTER
             val currVal = map[key] ?: 0
             map.put(key, currVal + 1)
         }
