@@ -13,6 +13,7 @@ import ru.gumerbaev.smokelimit.MainActivity
 import ru.gumerbaev.smokelimit.R
 import ru.gumerbaev.smokelimit.data.SmokesDbHelper
 import ru.gumerbaev.smokelimit.data.SmokesDbQueryExecutor
+import ru.gumerbaev.smokelimit.entity.SmokeEntity
 import ru.gumerbaev.smokelimit.utils.DateUtils
 import java.util.*
 import kotlin.concurrent.fixedRateTimer
@@ -30,14 +31,18 @@ class TimerNotificationService : Service() {
     }
 
     internal inner class TimeBinder(private val context: Context) : Binder() {
-        fun getTimeout(): Long? {
-            val lastSmokeTime = _dbExecutor.getLastEntries(1).firstOrNull()?.date?.time ?: return null
+        fun getLast(): SmokeEntity? {
+            return _dbExecutor.getLastEntries(1).firstOrNull()
+        }
+
+        fun getTimeout(lastEntry: SmokeEntity?): Long? {
+            val lastSmokeTime = lastEntry?.date?.time ?: return null
             val curr = System.currentTimeMillis()
             return curr - lastSmokeTime
         }
 
-        fun getRemain(realTimeoutMs: Long?): Int? {
-            if (realTimeoutMs == null) return null
+        fun getRemain(lastEntry: SmokeEntity?): Int? {
+            val realTimeoutMs = getTimeout(lastEntry) ?: return null
 
             val sharedPref = PreferenceManager.getDefaultSharedPreferences(context)
             val currTimeout = sharedPref.getInt(
@@ -46,10 +51,6 @@ class TimerNotificationService : Service() {
             )
 
             return DateUtils.toMinutes(realTimeoutMs) - currTimeout
-        }
-
-        fun getRemain(): Int? {
-            return getRemain(getTimeout())
         }
 
         fun update() {
@@ -106,7 +107,7 @@ class TimerNotificationService : Service() {
     }
 
     private fun setNotification() {
-        val remain = _binder.getRemain() ?: return
+        val remain = _binder.getRemain(_binder.getLast()) ?: return
         with(_notificationBuilder) {
             this?.setContentTitle(DateUtils.minString(remain))
             if (remain < 0) this?.setSmallIcon(android.R.drawable.ic_delete)

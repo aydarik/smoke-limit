@@ -9,8 +9,8 @@ class SmokeEntity(var id: Long?, var date: Date, var timeout: Int, var prev: Smo
 
     constructor(date: Date, timeout: Int) : this(null, date, timeout, null)
 
-    fun getDelay(): Long? {
-        if (prev == null) return null
+    fun getDelayMs(): Long? {
+        prev ?: return null
         return date.time - prev!!.date.time
     }
 
@@ -18,8 +18,8 @@ class SmokeEntity(var id: Long?, var date: Date, var timeout: Int, var prev: Smo
         return _sdf.format(date)
     }
 
-    fun getDelayString(): String? {
-        val delay = getDelay() ?: return "-"
-        return DateUtils.delayString(delay)
+    fun getDelayString(delayMs: Long?): String? {
+        delayMs ?: return null
+        return DateUtils.delayString(delayMs)
     }
 }

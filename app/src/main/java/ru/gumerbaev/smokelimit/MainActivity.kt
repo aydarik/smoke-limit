@@ -10,7 +10,6 @@ import android.os.IBinder
 import android.preference.PreferenceManager
 import android.util.Log
 import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import ru.gumerbaev.smokelimit.adapters.SmokeAdapter
@@ -20,7 +19,6 @@ import ru.gumerbaev.smokelimit.entity.SmokeEntity
 import ru.gumerbaev.smokelimit.service.TimerNotificationService
 import ru.gumerbaev.smokelimit.utils.DateUtils
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.concurrent.fixedRateTimer
 
 class MainActivity : AppCompatActivity() {
@@ -35,7 +33,6 @@ class MainActivity : AppCompatActivity() {
     private var _incTimeout: Int? = null
     private var _lastEntry: SmokeEntity? = null
 
-    private val _smokeEntries = ArrayList<SmokeEntity>()
     private var _smokeAdapter: SmokeAdapter? = null
 
     private var _timeBinder: TimerNotificationService.TimeBinder? = null
@@ -59,22 +56,12 @@ class MainActivity : AppCompatActivity() {
         fixedRateTimer(
             "time_check", true, Date(), 1000
         ) {
-            val realTimeoutMs = _timeBinder?.getTimeout()
-            val remain = _timeBinder?.getRemain(realTimeoutMs)
-            runOnUiThread {
-                justSmokedButton.text = DateUtils.minString(remain ?: 0)
-                justSmokedButton.isEnabled = remain != null && remain >= 0
-
-//                justSmokedButton.setBackgroundColor(
-//                    if (realTimeoutMs != null && realTimeoutMs < _smokeAdapter?.average() ?: 0) getColor(R.color.colorAccent)
-//                    else getColor(R.color.colorPrimary)
-//                )
-            }
+            checkState()
         }
 
         settingsLayout.visibility = View.GONE
 
-        _smokeAdapter = SmokeAdapter(_smokeEntries, this)
+        _smokeAdapter = SmokeAdapter(this)
         historyList.adapter = _smokeAdapter
 
         val sharedPref = PreferenceManager.getDefaultSharedPreferences(this)
@@ -142,15 +129,10 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetTextI18n")
     private fun loadLastEvents() {
         val entries = _dbExecutor.getLastEntries(200)
-        with(_smokeEntries) {
-            clear()
-            addAll(entries)
-        }
-        _smokeAdapter?.notifyDataSetChanged()
+        _smokeAdapter?.setEntries(entries)
 
         _lastEntry = entries.firstOrNull()
-
-        Toast.makeText(this, DateUtils.delayString(_smokeAdapter?.average() ?: 0), Toast.LENGTH_SHORT).show()
+        checkState()
     }
 
     private fun insertSmokeEntry() {
@@ -182,5 +164,18 @@ class MainActivity : AppCompatActivity() {
         }
 
         currTimeoutTextBox.value = _currTimeout!!
+    }
+
+    private fun checkState() {
+        val remain = _timeBinder?.getRemain(_lastEntry)
+        runOnUiThread {
+            justSmokedButton.text = DateUtils.minString(remain ?: 0)
+            justSmokedButton.isEnabled = remain != null && remain >= 0
+
+//                justSmokedButton.setBackgroundColor(
+//                    if (realTimeoutMs != null && realTimeoutMs < _smokeAdapter?.average() ?: 0) getColor(R.color.colorAccent)
+//                    else getColor(R.color.colorPrimary)
+//                )
+        }
     }
 }
