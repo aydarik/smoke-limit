@@ -154,6 +154,8 @@ class MainActivity : AppCompatActivity() {
 
         _dbExecutor.addEntry(SmokeEntity(Date(), _currTimeout!!))
         loadLastEvents()
+
+        _timeBinder?.update()
     }
 
     private fun increaseTimeout(incDays: Int) {

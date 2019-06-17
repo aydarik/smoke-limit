@@ -42,6 +42,10 @@ class TimerNotificationService : Service() {
             val realTimeoutMs = curr - lastSmokeTime
             return DateUtils.toMinutes(realTimeoutMs) - currTimeout
         }
+
+        fun update() {
+            setNotification()
+        }
     }
 
     private val _binder = TimeBinder(this)
@@ -72,9 +76,7 @@ class TimerNotificationService : Service() {
             "time_check", true, Date(), 1000 * 60
         ) {
             // threadHandler.obtainMessage().sendToTarget()
-            val remain = _binder.getRemain()
-            if (remain != null)
-                addNotification(DateUtils.minString(remain))
+            setNotification()
         }
         return super.onStartCommand(intent, flags, startId)
     }
@@ -91,10 +93,11 @@ class TimerNotificationService : Service() {
         }
     }
 
-    private fun addNotification(text: String) {
+    private fun setNotification() {
+        val remain = _binder.getRemain() ?: return
         with(_notificationBuilder) {
-            this?.setContentTitle(text)
-            if (text.startsWith('-')) this?.setSmallIcon(android.R.drawable.button_onoff_indicator_off)
+            this?.setContentTitle(DateUtils.minString(remain))
+            if (remain < 0) this?.setSmallIcon(android.R.drawable.button_onoff_indicator_off)
             else this?.setSmallIcon(android.R.drawable.button_onoff_indicator_on)
         }
 
