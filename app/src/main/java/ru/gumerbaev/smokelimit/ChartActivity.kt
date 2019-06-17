@@ -1,6 +1,7 @@
 package ru.gumerbaev.smokelimit
 
 import android.os.Bundle
+import android.util.Log
 import android.util.LongSparseArray
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.util.keyIterator
@@ -22,14 +23,17 @@ class ChartActivity : AppCompatActivity() {
 
     companion object {
         const val TAG = "ChartActivity"
-        const val INCREMENTER = 24 * 60 * 60 * 1000;
+        const val INCREMENTER = 24 * 60 * 60 * 1000
     }
+
+    private val _dbExecutor = SmokesDbQueryExecutor(SmokesDbHelper(this))
+    private val _tzOffset = TimeZone.getDefault().rawOffset
 
     internal inner class DateAxisValueFormatter : ValueFormatter() {
         private val _sdf = SimpleDateFormat("MM/dd", Locale.getDefault())
 
         override fun getAxisLabel(value: Float, axis: AxisBase?): String {
-            return _sdf.format(Date(value.toLong() * INCREMENTER))
+            return _sdf.format(Date(value.toLong() * INCREMENTER + _tzOffset))
         }
     }
 
@@ -44,12 +48,11 @@ class ChartActivity : AppCompatActivity() {
         }
     }
 
-    private val _dbExecutor = SmokesDbQueryExecutor(SmokesDbHelper(this))
-    private val _tzOffset = TimeZone.getDefault().rawOffset
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chart)
+
+        Log.d(TAG, "Chart activity created")
 
         chart.description.isEnabled = false
         chart.legend.isEnabled = false
@@ -82,6 +85,6 @@ class ChartActivity : AppCompatActivity() {
         dataSet.valueFormatter = intFormatter
         chart.data = BarData(dataSet)
 
-        chart.invalidate() // Refresh
+        chart.invalidate() // refresh
     }
 }

@@ -3,10 +3,11 @@ package ru.gumerbaev.smokelimit.service
 import android.app.*
 import android.content.Context
 import android.content.Intent
-import android.os.*
+import android.os.Binder
+import android.os.Build
+import android.os.IBinder
 import android.preference.PreferenceManager
 import android.util.Log
-import android.widget.Toast
 import androidx.core.app.NotificationManagerCompat
 import ru.gumerbaev.smokelimit.MainActivity
 import ru.gumerbaev.smokelimit.R
@@ -29,8 +30,14 @@ class TimerNotificationService : Service() {
     }
 
     internal inner class TimeBinder(private val context: Context) : Binder() {
-        fun getRemain(): Int? {
+        fun getTimeout(): Long? {
             val lastSmokeTime = _dbExecutor.getLastEntries(1).firstOrNull()?.date?.time ?: return null
+            val curr = System.currentTimeMillis()
+            return curr - lastSmokeTime
+        }
+
+        fun getRemain(realTimeoutMs: Long?): Int? {
+            if (realTimeoutMs == null) return null
 
             val sharedPref = PreferenceManager.getDefaultSharedPreferences(context)
             val currTimeout = sharedPref.getInt(
@@ -38,9 +45,11 @@ class TimerNotificationService : Service() {
                 resources.getInteger(R.integer.current_timeout_default_key)
             )
 
-            val curr = System.currentTimeMillis()
-            val realTimeoutMs = curr - lastSmokeTime
             return DateUtils.toMinutes(realTimeoutMs) - currTimeout
+        }
+
+        fun getRemain(): Int? {
+            return getRemain(getTimeout())
         }
 
         fun update() {

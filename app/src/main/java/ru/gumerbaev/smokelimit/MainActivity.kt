@@ -1,25 +1,26 @@
 package ru.gumerbaev.smokelimit
 
 import android.annotation.SuppressLint
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.IBinder
+import android.preference.PreferenceManager
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import ru.gumerbaev.smokelimit.adapters.SmokeAdapter
-import ru.gumerbaev.smokelimit.entity.SmokeEntity
 import ru.gumerbaev.smokelimit.data.SmokesDbHelper
 import ru.gumerbaev.smokelimit.data.SmokesDbQueryExecutor
+import ru.gumerbaev.smokelimit.entity.SmokeEntity
+import ru.gumerbaev.smokelimit.service.TimerNotificationService
 import ru.gumerbaev.smokelimit.utils.DateUtils
 import java.util.*
 import kotlin.collections.ArrayList
-import android.content.ComponentName
-import android.os.IBinder
-import android.content.ServiceConnection
-import android.preference.PreferenceManager
-import ru.gumerbaev.smokelimit.service.TimerNotificationService
 import kotlin.concurrent.fixedRateTimer
 
 class MainActivity : AppCompatActivity() {
@@ -58,10 +59,16 @@ class MainActivity : AppCompatActivity() {
         fixedRateTimer(
             "time_check", true, Date(), 1000
         ) {
-            val remain = _timeBinder?.getRemain()
+            val realTimeoutMs = _timeBinder?.getTimeout()
+            val remain = _timeBinder?.getRemain(realTimeoutMs)
             runOnUiThread {
                 justSmokedButton.text = DateUtils.minString(remain ?: 0)
                 justSmokedButton.isEnabled = remain != null && remain >= 0
+
+//                justSmokedButton.setBackgroundColor(
+//                    if (realTimeoutMs != null && realTimeoutMs < _smokeAdapter?.average() ?: 0) getColor(R.color.colorAccent)
+//                    else getColor(R.color.colorPrimary)
+//                )
             }
         }
 
@@ -142,6 +149,8 @@ class MainActivity : AppCompatActivity() {
         _smokeAdapter?.notifyDataSetChanged()
 
         _lastEntry = entries.firstOrNull()
+
+        Toast.makeText(this, DateUtils.delayString(_smokeAdapter?.average() ?: 0), Toast.LENGTH_SHORT).show()
     }
 
     private fun insertSmokeEntry() {
