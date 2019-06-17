@@ -84,11 +84,18 @@ class TimerNotificationService : Service() {
         return _binder
     }
 
+    override fun onDestroy() {
+        // Hide the notification
+        with(NotificationManagerCompat.from(this)) {
+            cancel(NOTIFICATION_ID)
+        }
+    }
+
     private fun addNotification(text: String) {
         with(_notificationBuilder) {
-            this?.setContentText(text)
-            if (text.startsWith('-')) this?.setSmallIcon(android.R.drawable.ic_dialog_alert)
-            else this?.setSmallIcon(android.R.drawable.ic_dialog_info)
+            this?.setContentTitle(text)
+            if (text.startsWith('-')) this?.setSmallIcon(android.R.drawable.button_onoff_indicator_off)
+            else this?.setSmallIcon(android.R.drawable.button_onoff_indicator_on)
         }
 
         val notification = _notificationBuilder?.build() ?: return
@@ -105,8 +112,11 @@ class TimerNotificationService : Service() {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val importance = NotificationManager.IMPORTANCE_LOW
-            val channel = NotificationChannel(CHANNEL_ID, "timeout", importance).apply {}
+            val channel = NotificationChannel(
+                CHANNEL_ID, "timeout",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {}
+
             // Register the channel with the system
             with(NotificationManagerCompat.from(this)) {
                 createNotificationChannel(channel)
@@ -114,12 +124,13 @@ class TimerNotificationService : Service() {
         }
 
         val builder = Notification.Builder(this, CHANNEL_ID)
-            .setContentTitle(getText(R.string.app_name))
 
         // Create the pending intent and add to the notification
         val intent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
         builder.setContentIntent(pendingIntent)
+
+        startForeground(NOTIFICATION_ID, builder.build())
 
         return builder
     }
