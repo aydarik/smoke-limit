@@ -58,8 +58,9 @@ class TimerNotificationService : Service() {
         if (started) return super.onStartCommand(intent, flags, startId)
 
         started = true
+        Log.d(TAG, "Service started")
+
         _notificationBuilder = createNotificationChannel()
-        Toast.makeText(this, R.string.app_name, Toast.LENGTH_SHORT).show()
 
 /*
         val context = this.applicationContext;
@@ -87,6 +88,8 @@ class TimerNotificationService : Service() {
     }
 
     override fun onDestroy() {
+        Log.d(TAG, "Service destroyed")
+
         // Hide the notification
         with(NotificationManagerCompat.from(this)) {
             cancel(NOTIFICATION_ID)
@@ -97,8 +100,8 @@ class TimerNotificationService : Service() {
         val remain = _binder.getRemain() ?: return
         with(_notificationBuilder) {
             this?.setContentTitle(DateUtils.minString(remain))
-            if (remain < 0) this?.setSmallIcon(android.R.drawable.button_onoff_indicator_off)
-            else this?.setSmallIcon(android.R.drawable.button_onoff_indicator_on)
+            if (remain < 0) this?.setSmallIcon(android.R.drawable.ic_delete)
+            else this?.setSmallIcon(android.R.drawable.ic_input_add)
         }
 
         val notification = _notificationBuilder?.build() ?: return
@@ -116,7 +119,7 @@ class TimerNotificationService : Service() {
         // the NotificationChannel class is new and not in the support library
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                CHANNEL_ID, "timeout",
+                CHANNEL_ID, "Timeout",
                 NotificationManager.IMPORTANCE_LOW
             ).apply {}
 

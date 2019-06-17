@@ -160,7 +160,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun increaseTimeout(incDays: Int) {
         val maxTimeout = resources.getInteger(R.integer.max_timeout_default_key)
-        _currTimeout = _currTimeout?.plus((_incTimeout!! * incDays))
+        _currTimeout = _currTimeout?.plus((_incTimeout!! * incDays)) ?: return
         if (_currTimeout!! > maxTimeout) {
             _currTimeout = maxTimeout
             Log.d(TAG, "Max value reached")

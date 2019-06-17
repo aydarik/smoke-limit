@@ -23,7 +23,7 @@ class DateUtils {
             return "${if (isMinus) "-" else ""}$hour:$min"
         }
 
-        fun dayDiff(date: Date): Int = toDays(System.currentTimeMillis()) - toDays(date.time)
+        fun dayDiff(date: Date): Int = toDays(System.currentTimeMillis()) - toDays(date.time + TimeZone.getDefault().rawOffset)
         private fun toDays(timestamp: Long): Int = toMinutes(timestamp) / (60 * 24)
     }
 }
