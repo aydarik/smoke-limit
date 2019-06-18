@@ -5,6 +5,7 @@ import java.util.*
 class DateUtils {
     companion object {
         fun toMinutes(timestamp: Long): Int = (timestamp / (1000 * 60)).toInt()
+        private fun toDays(timestamp: Long): Int = toMinutes(timestamp) / (60 * 24)
 
         fun delayString(delayMs: Long): String {
             return minString(toMinutes(delayMs))
@@ -23,7 +24,6 @@ class DateUtils {
             return "${if (isMinus) "-" else ""}$hour:$min"
         }
 
-        fun dayDiff(date: Date): Int = toDays(System.currentTimeMillis()) - toDays(date.time + TimeZone.getDefault().rawOffset)
-        private fun toDays(timestamp: Long): Int = toMinutes(timestamp) / (60 * 24)
+        fun dayDiff(date: Date): Int = toDays(System.currentTimeMillis()) - toDays(date.time)
     }
 }

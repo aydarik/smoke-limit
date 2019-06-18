@@ -3,8 +3,6 @@
     <string name="app_name">Smoke Limit</string>
     <string name="current_timeout">Текущее\nограничение</string>
     <string name="increment_timeout">Ежедневное\nувеличение</string>
-    <string name="minutes">мин</string>
-    <string name="hours">час</string>
     <string name="just_smoked">Покурил</string>
     <string name="settings">Настройки</string>
     <string name="chart">График</string>

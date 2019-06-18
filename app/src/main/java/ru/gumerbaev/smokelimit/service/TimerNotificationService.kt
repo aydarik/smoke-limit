@@ -84,7 +84,7 @@ class TimerNotificationService : Service() {
 */
 
         fixedRateTimer(
-            "time_check", true, Date(), 1000 * 60
+            "time_check", true, Date(), 60 * 1000
         ) {
             // threadHandler.obtainMessage().sendToTarget()
             setNotification()

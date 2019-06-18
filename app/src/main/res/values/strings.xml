@@ -3,8 +3,6 @@
     <string name="app_name">Smoke Limit</string>
     <string name="current_timeout">Current\ntimeout</string>
     <string name="increment_timeout">Increment\ntimeout</string>
-    <string name="minutes">min</string>
-    <string name="hours">hour</string>
     <string name="just_smoked">Just smoked</string>
     <string name="settings">Settings</string>
     <string name="chart">Chart</string>

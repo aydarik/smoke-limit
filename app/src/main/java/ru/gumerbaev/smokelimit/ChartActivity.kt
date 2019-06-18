@@ -27,13 +27,12 @@ class ChartActivity : AppCompatActivity() {
     }
 
     private val _dbExecutor = SmokesDbQueryExecutor(SmokesDbHelper(this))
-    private val _tzOffset = TimeZone.getDefault().rawOffset
 
     internal inner class DateAxisValueFormatter : ValueFormatter() {
         private val _sdf = SimpleDateFormat("MM/dd", Locale.getDefault())
 
         override fun getAxisLabel(value: Float, axis: AxisBase?): String {
-            return _sdf.format(Date(value.toLong() * INCREMENTER + _tzOffset))
+            return _sdf.format(Date(value.toLong() * INCREMENTER))
         }
     }
 
@@ -69,7 +68,7 @@ class ChartActivity : AppCompatActivity() {
         val map = LongSparseArray<Int>()
         val entries = _dbExecutor.getLastEntries(1000)
         entries.forEach {
-            val key = (it.date.time + _tzOffset) / INCREMENTER
+            val key = it.date.time / INCREMENTER
             val currVal = map[key] ?: 0
             map.put(key, currVal + 1)
         }

@@ -1,6 +1,5 @@
 package ru.gumerbaev.smokelimit
 
-import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -39,6 +38,7 @@ class MainActivity : AppCompatActivity() {
     private val _serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
             _timeBinder = service as TimerNotificationService.TimeBinder
+            checkState()
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
@@ -53,16 +53,11 @@ class MainActivity : AppCompatActivity() {
         val timerIntent = TimerNotificationService.getIntent(this)
         startForegroundService(timerIntent)
 
-        fixedRateTimer(
-            "time_check", true, Date(), 1000
-        ) {
-            checkState()
-        }
-
         settingsLayout.visibility = View.GONE
 
         _smokeAdapter = SmokeAdapter(this)
         historyList.adapter = _smokeAdapter
+        loadLastEvents()
 
         val sharedPref = PreferenceManager.getDefaultSharedPreferences(this)
         _currTimeout = sharedPref.getInt(
@@ -112,7 +107,11 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        loadLastEvents()
+        fixedRateTimer(
+            "time_check", true, Date(), 30 * 1000
+        ) {
+            checkState()
+        }
     }
 
     override fun onResume() {
@@ -126,13 +125,10 @@ class MainActivity : AppCompatActivity() {
         super.onStop()
     }
 
-    @SuppressLint("SetTextI18n")
     private fun loadLastEvents() {
         val entries = _dbExecutor.getLastEntries(200)
         _smokeAdapter?.setEntries(entries)
-
         _lastEntry = entries.firstOrNull()
-        checkState()
     }
 
     private fun insertSmokeEntry() {
@@ -145,6 +141,7 @@ class MainActivity : AppCompatActivity() {
 
         _dbExecutor.addEntry(SmokeEntity(Date(), _currTimeout!!))
         loadLastEvents()
+        checkState()
 
         _timeBinder?.update()
     }
